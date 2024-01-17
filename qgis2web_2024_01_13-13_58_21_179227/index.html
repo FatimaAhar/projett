@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="css/leaflet.css">
+    <link rel="stylesheet" href="css/qgis2web.css">
+    <link rel="stylesheet" href="css/fontawesome-all.min.css">
+    <style>
+        #map {
+            width: 1079px;
+            height: 512px;
+        }
+    
+        .legend {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: absolute;
+            bottom: 10px; /* Modification ici pour déplacer la légende en bas */
+            right: 10px; /* Modification ici pour déplacer la légende à droite */
+        }
+    
+        .legend img {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+        }
+    </style>
+    
+    <title>Carte de la distribution géographique des principales espèces marines exploitées au Maroc</title>
+</head>
+
+<body>
+    <h1>Carte de la distribution géographique des principales espèces marines exploitées au Maroc</h1>
+
+    <div id="map"></div>
+
+    <div class="legend">
+        <p><img src="C:\\Users\\hp\\Desktop\\sigcarte11\\qgis2web_2024_01_13-13_58_21_179227\\images\\posson.png" alt="Fish Icon"> Poissons osseux</p>
+        <p><img src="C:\\Users\\hp\\Desktop\\sigcarte11\\qgis2web_2024_01_13-13_58_21_179227\\images\\crevette.png" alt="Shrimp Icon"> Crustacés</p>
+        <p><img src="C:\\Users\\hp\\Desktop\\sigcarte11\\qgis2web_2024_01_13-13_58_21_179227\\images\\poulpe.png" alt="Octopus Icon"> Céphalopodes</p>
+    </div>
+
+    <script src="js/qgis2web_expressions.js"></script>
+    <script src="js/leaflet.js"></script>
+    <script src="js/leaflet.rotatedMarker.js"></script>
+    <script src="js/leaflet.pattern.js"></script>
+    <script src="js/leaflet-hash.js"></script>
+    <script src="js/Autolinker.min.js"></script>
+    <script src="js/rbush.min.js"></script>
+    <script src="js/labelgun.min.js"></script>
+    <script src="js/labels.js"></script>
+    <script src="data/DA_REGIONS_12R_1.js"></script>
+    <script src="data/sp_maroc_2.js"></script>
+
+    <script>
+        var map = L.map('map', {
+            zoomControl: true,
+            maxZoom: 28,
+            minZoom: 1
+        }).fitBounds([
+            [23.213401483621674, -25.292280853602094],
+            [39.12537725872282, 8.310067989111502]
+        ]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({
+            truncate: {
+                length: 30,
+                location: 'smart'
+            }
+        });
+        var bounds_group = new L.featureGroup([]);
+
+        function setBounds() {}
+
+        map.createPane('pane_OSMStandard_0');
+        map.getPane('pane_OSMStandard_0').style.zIndex = 400;
+        var layer_OSMStandard_0 = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OSMStandard_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors, CC-BY-SA</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        }).addTo(map);
+
+        function pop_DA_REGIONS_12R_1(feature, layer) {
+            var popupContent = '<table>\
+                <tr>\
+                    <td colspan="2"><strong>Région :</strong> ' + (feature.properties['Nom_Region'] !== null ? autolinker.link(feature.properties['Nom_Region'].toLocaleString()) : '') + '</td>\
+                </tr>\
+            </table>';
+            layer.bindPopup(popupContent, {
+                maxHeight: 400
+            });
+        }
+
+        function style_DA_REGIONS_12R_1_0() {
+            return {
+                pane: 'pane_DA_REGIONS_12R_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)', // Bleu
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, // Épaisseur des bordures
+                fill: false, // Pas de remplissage
+                interactive: true,
+            };
+        }
+        map.createPane('pane_DA_REGIONS_12R_1');
+        map.getPane('pane_DA_REGIONS_12R_1').style.zIndex = 401;
+        map.getPane('pane_DA_REGIONS_12R_1').style['mix-blend-mode'] = 'normal';
+        var layer_DA_REGIONS_12R_1 = new L.geoJson(json_DA_REGIONS_12R_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_DA_REGIONS_12R_1',
+            layerName: 'layer_DA_REGIONS_12R_1',
+            pane: 'pane_DA_REGIONS_12R_1',
+            onEachFeature: pop_DA_REGIONS_12R_1,
+            style: style_DA_REGIONS_12R_1_0,
+        }).addTo(map);
+
+        function pop_sp_maroc_2(feature, layer) {
+    var popupContent = '<table>\
+        <tr>\
+            <th scope="row" style="font-weight:bold;">sp</th>\
+            <td>' + (feature.properties['sp'] !== null ? autolinker.link('<strong> : ' + feature.properties['sp'].toLocaleString() + '</strong>') : '') + '</td>\
+        </tr>\
+        <tr>\
+            <th scope="row" style="font-weight:bold;">famille</th>\
+            <td>' + (feature.properties['famille'] !== null ? autolinker.link('<strong> : ' + feature.properties['famille'].toLocaleString() + '</strong>') : '') + '</td>\
+        </tr>\
+        <tr>\
+            <th scope="row" style="font-weight:bold;">groupe</th>\
+            <td>' + (feature.properties['groupe'] !== null ? autolinker.link('<strong> : ' + feature.properties['groupe'].toLocaleString() + '</strong>') : '') + '</td>\
+        </tr>\
+        <tr>\
+            <th scope="row" style="font-weight:bold;">profondeur</th>\
+            <td>' + (feature.properties['profondeur'] !== null ? autolinker.link('<strong> : ' + feature.properties['profondeur'].toLocaleString() + '</strong>') : '') + '</td>\
+        </tr>\
+        <tr>\
+            <th scope="row" style="font-weight:bold;">habitat</th>\
+            <td>' + (feature.properties['habitat'] !== null ? autolinker.link('<strong> : ' + feature.properties['habitat'].toLocaleString() + '</strong>') : '') + '</td>\
+        </tr>\
+    </table>';
+
+    layer.bindPopup(popupContent, {
+        maxHeight: 400
+    });
+}
+
+
+        // Création des icônes
+        var fishIcon = L.icon({
+            iconUrl: 'C:\\Users\\hp\\Desktop\\sigcarte11\\qgis2web_2024_01_13-13_58_21_179227\\images\\posson.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            popupAnchor: [0, -8],
+        });
+
+        var shrimpIcon = L.icon({
+            iconUrl: 'C:\\Users\\hp\\Desktop\\sigcarte11\\qgis2web_2024_01_13-13_58_21_179227\\images\\crevette.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            popupAnchor: [0, -8],
+        });
+
+        var octopusIcon = L.icon({
+            iconUrl: 'C:\\Users\\hp\\Desktop\\sigcarte11\\qgis2web_2024_01_13-13_58_21_179227\\images\\poulpe.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            popupAnchor: [0, -8],
+        });
+
+        map.createPane('pane_sp_maroc_2');
+        map.getPane('pane_sp_maroc_2').style.zIndex = 402;
+        map.getPane('pane_sp_maroc_2').style['mix-blend-mode'] = 'normal';
+        var layer_sp_maroc_2 = new L.geoJson(json_sp_maroc_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_sp_maroc_2',
+            layerName: 'layer_sp_maroc_2',
+            pane: 'pane_sp_maroc_2',
+            onEachFeature: pop_sp_maroc_2,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+
+                // Sélection de l'icône en fonction du groupe (insensible à la casse)
+                var icon;
+                switch (feature.properties['groupe'].toLowerCase()) {
+                    case 'poissons osseux':
+                        icon = fishIcon;
+                        break;
+                    case 'crustacés':
+                        icon = shrimpIcon;
+                        break;
+                    case 'céphalopodes':
+                        icon = octopusIcon;
+                        break;
+                    default:
+                        // Icône par défaut si le groupe n'est pas reconnu
+                        icon = L.icon({
+                            iconUrl: 'C:\\Users\\hp\\Desktop\\sigcarte11\\qgis2web_2024_01_13-13_58_21_179227\\images\\loca.png',
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16],
+                            popupAnchor: [0, -8],
+                        });
+                }
+
+                return L.marker(latlng, {
+                    icon: icon
+                });
+            },
+        }).addTo(map);
+
+        bounds_group.addLayer(layer_sp_maroc_2);
+        map.addLayer(layer_sp_maroc_2);
+        setBounds();
+
+        // Ajouter le contrôle d'échelle à la carte
+        L.control.scale().addTo(map);
+    </script>
+</body>
+
+</html>
