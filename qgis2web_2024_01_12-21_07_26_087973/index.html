@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="css/leaflet.css">
+    <link rel="stylesheet" href="css/qgis2web.css">
+    <link rel="stylesheet" href="css/fontawesome-all.min.css">
+    <!-- Ajoutez la ligne suivante pour inclure jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style>
+        #map {
+            width: 1079px;
+            height: 512px;
+        }
+
+        h1 {
+            font-size: 24px; /* Taille de police du titre */
+        }
+
+        #filter-controls {
+            display: none;
+            position: absolute;
+            bottom: 10px; /* Ajustez la position verticale selon vos besoins */
+            left: 10px;
+            background-color: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            font-size: 14px; /* Taille de police des filtres */
+        }
+
+        #filter-icon {
+            position: absolute;
+            bottom: 30px; /* Ajustez la position verticale selon vos besoins */
+            left: 10px;
+            cursor: pointer;
+            background-color: white;
+            padding: 5px;
+            border: 1px solid #ccc;
+            z-index: 1001;
+        }
+    </style>
+    <title></title>
+</head>
+
+<body>
+    <h1>La carte des ports du Maroc</h1>
+
+    <div id="map"></div>
+
+    <!-- Ajoutez une icône d'entonnoir pour afficher/masquer les filtres -->
+    <div id="filter-icon">
+        <i class="fas fa-filter"></i>
+    </div>
+
+    <div id="filter-controls">
+        <label>
+            <input type="radio" name="port-filter" value="all" checked> Tous types de ports
+        </label>
+        <label>
+            <input type="radio" name="port-filter" value="Plaisance"> Plaisance
+        </label>
+        <label>
+            <input type="radio" name="port-filter" value="Passagers"> Passagers
+        </label>
+        <label>
+            <input type="radio" name="port-filter" value="Commerce"> Commerce
+        </label>
+        <label>
+            <input type="radio" name="port-filter" value="Pêche"> Pêche
+        </label>
+        <label>
+            <input type="radio" name="port-filter" value="Militaire"> Militaire
+        </label>
+        <label>
+            <input type="radio" name="port-filter" value="Croisière"> Croisière
+        </label>
+    </div>
+
+    <script src="js/qgis2web_expressions.js"></script>
+    <script src="js/leaflet.js"></script>
+    <script src="js/leaflet.rotatedMarker.js"></script>
+    <script src="js/leaflet.pattern.js"></script>
+    <script src="js/leaflet-hash.js"></script>
+    <script src="js/Autolinker.min.js"></script>
+    <script src="js/rbush.min.js"></script>
+    <script src="js/labelgun.min.js"></script>
+    <script src="js/labels.js"></script>
+    <script src="js/leaflet.control.scale.js"></script>
+    <script src="data/DA_REGIONS_12R_1.js"></script>
+    <script src="data/ports_maroc_2.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Gérez le clic sur l'icône d'entonnoir
+            $("#filter-icon").click(function () {
+                $("#filter-controls").toggle();
+            });
+        });
+        var map = L.map('map', {
+            zoomControl: true,
+            maxZoom: 28,
+            minZoom: 1
+        }).fitBounds([
+            [32.63583298200385, -11.365246216578218],
+            [37.94000820740747, -0.1640761817552665]
+        ]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({
+            truncate: {
+                length: 30,
+                location: 'smart'
+            }
+        });
+        var bounds_group = new L.featureGroup([]);
+
+        function setBounds() {}
+
+        map.createPane('pane_OSMStandard_0');
+        map.getPane('pane_OSMStandard_0').style.zIndex = 400;
+        var layer_OSMStandard_0 = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OSMStandard_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors, CC-BY-SA</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OSMStandard_0;
+        map.addLayer(layer_OSMStandard_0);
+
+        // Ajoute le contrôle d'échelle à la carte
+        L.control.scale().addTo(map);
+
+        function pop_DA_REGIONS_12R_1(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Nom_Region'] !== null ? autolinker.link(feature.properties['Nom_Region'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {
+                maxHeight: 400
+            });
+        }
+
+        function style_DA_REGIONS_12R_1_0() {
+    return {
+        pane: 'pane_DA_REGIONS_12R_1',
+        opacity: 1,
+        color: 'orange', // Changer la couleur des bordures à orange
+        dashArray: '',
+        lineCap: 'butt',
+        lineJoin: 'miter',
+        weight: 2.5, // Épaisseur des bordures
+        fill: false, // Pas de remplissage
+        fillOpacity: 0, // Opacité du remplissage (0 signifie transparent)
+        interactive: true,
+    };
+}
+        map.createPane('pane_DA_REGIONS_12R_1');
+        map.getPane('pane_DA_REGIONS_12R_1').style.zIndex = 401;
+        map.getPane('pane_DA_REGIONS_12R_1').style['mix-blend-mode'] = 'normal';
+        var layer_DA_REGIONS_12R_1 = new L.geoJson(json_DA_REGIONS_12R_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_DA_REGIONS_12R_1',
+            layerName: 'layer_DA_REGIONS_12R_1',
+            pane: 'pane_DA_REGIONS_12R_1',
+            onEachFeature: pop_DA_REGIONS_12R_1,
+            style: style_DA_REGIONS_12R_1_0,
+        });
+        bounds_group.addLayer(layer_DA_REGIONS_12R_1);
+        map.addLayer(layer_DA_REGIONS_12R_1);
+
+        var selectedPortType = "Plaisance";
+
+        function pop_ports_maroc_2(feature, layer) {
+    var portName = (feature.properties['Port'] !== null ? autolinker.link('<strong>' + feature.properties['Port'].toLocaleString() + '</strong>') : '');
+    var region = (feature.properties['Région'] !== null ? autolinker.link(feature.properties['Région'].toLocaleString()) : '');
+    
+    // Vérifie si un filtre est appliqué
+    var isFiltered = $('input[name="port-filter"]:checked').val() !== 'all';
+
+    if (isFiltered) {
+        var popupContent = '<table>' +
+            '<tr>' +
+            '<th scope="row">Port</th>' +
+            '<td>:' + portName + '</td>' +
+            '</tr>' +
+            '<tr>' +
+            '<th scope="row">Région</th>' +
+            '<td>:' + region + '</td>' +
+            '</tr>' +
+            '</table>';
+
+        layer.bindPopup(popupContent, {
+            maxHeight: 400
+        });
+    } else {
+        // Si "Tous types de ports" est sélectionné, affichez les attributs spécifiques
+        var portAttributes = Object.keys(feature.properties).filter(function (key) {
+            return key !== 'Port' && key !== 'Région' && feature.properties[key] === 'oui';
+        }).join(', ');
+
+        var popupContent = '<table>' +
+            '<tr>' +
+            '<th scope="row">Port</th>' +
+            '<td>:' + portName + ' (' + portAttributes + ')</td>' +
+            '</tr>' +
+            '<tr>' +
+            '<th scope="row">Région</th>' +
+            '<td>:' + region + '</td>' +
+            '</tr>' +
+            '</table>';
+
+        layer.bindPopup(popupContent, {
+            maxHeight: 400
+        });
+    }
+}
+
+
+function style_ports_maroc_2_0(feature) {
+    var selectedPortType = $('input[name="port-filter"]:checked').val();
+
+    // Utilisation de l'icône en fonction du type de port
+    var iconUrl;
+    switch (selectedPortType) {
+        case "Plaisance":
+            iconUrl = 'C:\\Users\\hp\\Desktop\\sigcarte4\\qgis2web_2024_01_12-21_07_26_087973\\plaisance 1.png'; // Remplacez par le chemin de l'icône pour Plaisance
+            break;
+        case "Passagers":
+            iconUrl = 'C:\\Users\\hp\\Desktop\\sigcarte4\\qgis2web_2024_01_12-21_07_26_087973\\passagers.png'; // Remplacez par le chemin de l'icône pour Passagers
+            break;
+        case "Commerce":
+            iconUrl = 'C:\\Users\\hp\\Desktop\\sigcarte4\\qgis2web_2024_01_12-21_07_26_087973\\commerce.png'; // Remplacez par le chemin de l'icône pour Commerce
+            break;
+        case "Pêche":
+            iconUrl = 'C:\\Users\\hp\\Desktop\\sigcarte4\\qgis2web_2024_01_12-21_07_26_087973\\peche.png'; // Remplacez par le chemin de l'icône pour Pêche
+            break;
+        case "Militaire":
+            iconUrl = 'C:\\Users\\hp\\Desktop\\sigcarte4\\qgis2web_2024_01_12-21_07_26_087973\\la_marine-removebg-preview.png'; // Remplacez par le chemin de l'icône pour Militaire
+            break;
+        case "Croisière":
+            iconUrl = 'C:\\Users\\hp\\Desktop\\sigcarte4\\qgis2web_2024_01_12-21_07_26_087973\\coisière1.png'; // Remplacez par le chemin de l'icône pour Croisière
+            break;
+        default:
+            // Si aucun type ne correspond, utilisez une icône par défaut
+            iconUrl = 'C:\\Users\\hp\\Desktop\\sigcarte4\\qgis2web_2024_01_12-21_07_26_087973\\port.png'; // Remplacez par le chemin de l'icône par défaut
+    }
+
+    var boatIcon = L.icon({
+        iconUrl: iconUrl,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -8]
+    });
+
+    return {
+        pane: 'pane_ports_maroc_2',
+        radius: 4.0,
+        opacity: 1,
+        color: 'rgba(35,35,35,1.0)',
+        dashArray: '',
+        lineCap: 'butt',
+        lineJoin: 'miter',
+        weight: 1,
+        fill: true,
+        fillOpacity: 1,
+        fillColor: 'rgba(125,139,143,1.0)',
+        interactive: true,
+        icon: boatIcon
+    };
+}
+
+
+        map.createPane('pane_ports_maroc_2');
+        map.getPane('pane_ports_maroc_2').style.zIndex = 402;
+        map.getPane('pane_ports_maroc_2').style['mix-blend-mode'] = 'normal';
+        var layer_ports_maroc_2 = new L.geoJson(json_ports_maroc_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_ports_maroc_2',
+            layerName: 'layer_ports_maroc_2',
+            pane: 'pane_ports_maroc_2',
+            onEachFeature: pop_ports_maroc_2,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_ports_maroc_2_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_ports_maroc_2);
+        map.addLayer(layer_ports_maroc_2);
+        setBounds();
+        // Ajoutez la section de filtrage des ports en fonction du type sélectionné
+        $('input[name="port-filter"]').change(function () {
+    var selectedPortType = $(this).val();
+
+    if (selectedPortType === 'all') {
+        // Si "Tous types de ports" est sélectionné, affichez tous les ports
+        layer_ports_maroc_2.clearLayers();
+        layer_ports_maroc_2.addData(json_ports_maroc_2);
+    } else {
+        // Sinon, filtrez les ports en fonction du type sélectionné
+        layer_ports_maroc_2.clearLayers();
+        var filteredPortsData = json_ports_maroc_2.features.filter(function (feature) {
+            return feature.properties[selectedPortType] === 'oui';
+        });
+        layer_ports_maroc_2.addData({
+            type: 'FeatureCollection',
+            features: filteredPortsData
+        });
+    }
+});
+
+
+
+    </script>
+</body>
+
+</html>

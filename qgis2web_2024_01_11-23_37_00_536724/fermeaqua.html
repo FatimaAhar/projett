@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="css/leaflet.css">
+    <link rel="stylesheet" href="css/qgis2web.css">
+    <link rel="stylesheet" href="css/fontawesome-all.min.css">
+    <style>
+        #map {
+            width: 1079px;
+            height: 512px;
+        }
+
+        h1 {
+            font-family: 'Calibri', sans-serif;
+            font-size: 24px; /* Vous pouvez ajuster la taille selon vos besoins */
+            color: black;
+            font-weight: bold;
+        }
+
+        .legend {
+            line-height: 18px;
+            color: #555;
+            background-color: #f5f5f5; /* Couleur de fond pour le rectangle de la légende */
+            border: 1px solid #ddd; /* Bordure de la légende */
+            border-radius: 5px; /* Coins arrondis */
+            padding: 5px; /* Espace intérieur de la légende */
+            opacity: 0.9; /* Opacité */
+        }
+
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+    </style>
+    <title>Carte de la localisation des fermes aquacoles au Maroc</title>
+</head>
+<body>
+    <h1>Carte de la localisation des fermes aquacoles au Maroc</h1>
+    <div id="map"></div>
+    <div id="legend" class="legend"></div>
+    <script src="js/qgis2web_expressions.js"></script>
+    <script src="js/leaflet.js"></script>
+    <script src="js/leaflet.rotatedMarker.js"></script>
+    <script src="js/leaflet.pattern.js"></script>
+    <script src="js/leaflet-hash.js"></script>
+    <script src="js/Autolinker.min.js"></script>
+    <script src="js/rbush.min.js"></script>
+    <script src="js/labelgun.min.js"></script>
+    <script src="js/labels.js"></script>
+    <script src="data/DA_REGIONS_12R_1.js"></script>
+    <script src="data/fermes_aquacoles_2.js"></script>
+    <script src="data/loca_ferme_3.js"></script>
+    <script>
+        var map = L.map('map', {
+            zoomControl:true, maxZoom:28, minZoom:1
+        }).fitBounds([[16.342206684732183,-33.42820086214805],[40.20988563843918,16.977034086213543]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+            // ... Votre fonction setBounds existante ...
+        }
+
+        map.createPane('pane_OSMStandard_0');
+        map.getPane('pane_OSMStandard_0').style.zIndex = 400;
+        var layer_OSMStandard_0 = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OSMStandard_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors, CC-BY-SA</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OSMStandard_0.addTo(map);
+
+        function pop_DA_REGIONS_12R_1(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Nom_Region'] !== null ? autolinker.link(feature.properties['Nom_Region'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_DA_REGIONS_12R_1_0() {
+            return {
+                pane: 'pane_DA_REGIONS_12R_1',
+                opacity: 1,
+                color: 'black', // Couleur de la ligne
+                dashArray: '',
+                lineCap: 'round',
+                lineJoin: 'round',
+                weight: 2.0,  // Épaisseur de la ligne en gras
+                fill: false,  // Pas de remplissage
+                interactive: true,
+            };
+        }
+
+        map.createPane('pane_DA_REGIONS_12R_1');
+        map.getPane('pane_DA_REGIONS_12R_1').style.zIndex = 401;
+        map.getPane('pane_DA_REGIONS_12R_1').style['mix-blend-mode'] = 'normal';
+        var layer_DA_REGIONS_12R_1 = new L.geoJson(json_DA_REGIONS_12R_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_DA_REGIONS_12R_1',
+            layerName: 'layer_DA_REGIONS_12R_1',
+            pane: 'pane_DA_REGIONS_12R_1',
+            onEachFeature: pop_DA_REGIONS_12R_1,
+            style: style_DA_REGIONS_12R_1_0,
+        });
+        bounds_group.addLayer(layer_DA_REGIONS_12R_1);
+        map.addLayer(layer_DA_REGIONS_12R_1);
+        function pop_fermes_aquacoles_2(feature, layer) {
+    var popupContent = '<div style="background-color: white; color: black; padding: 10px;">\
+        <table>\
+            <tr>\
+                <th style="font-weight: bold;" scope="row">Type</th>\
+                <td>: ' + (feature.properties['type'] !== null ? autolinker.link(feature.properties['type'].toLocaleString()) : '') + '</td>\
+            </tr>\
+            <tr>\
+                <th style="font-weight: bold;" scope="row">Zone</th>\
+                <td>: ' + (feature.properties['zone'] !== null ? autolinker.link(feature.properties['zone'].toLocaleString()) : '') + '</td>\
+            </tr>\
+            <tr>\
+                <th style="font-weight: bold;" scope="row">Région</th>\
+                <td>: ' + (feature.properties['région'] !== null ? autolinker.link(feature.properties['région'].toLocaleString()) : '') + '</td>\
+            </tr>\
+        </table>\
+    </div>';
+    layer.bindPopup(popupContent, { maxWidth: 400, maxHeight: 300 }); // Vous pouvez ajuster maxWidth et maxHeight selon vos besoins
+}
+
+        function style_fermes_aquacoles_2_0(feature) {
+    var type = feature.properties['type'];
+    var fillColor;
+
+    // Définir la couleur en fonction du type de ferme
+    switch (type) {
+        case 'Pisciculture':
+            fillColor = 'blue';
+            break;
+        case 'Algoculture':
+            fillColor = 'green';
+            break;
+        case 'Conchyliculture':
+            fillColor = 'yellow';
+            break;
+        default:
+            fillColor = 'rgba(243,166,178,1.0)';
+    }
+
+    return {
+        pane: 'pane_fermes_aquacoles_2',
+        opacity: 1,
+        color: 'rgba(35,35,35,1.0)',
+        dashArray: '',
+        lineCap: 'butt',
+        lineJoin: 'miter',
+        weight: 1.0,
+        fill: true,
+        fillOpacity: 1,
+        fillColor: fillColor, // Utilise la couleur définie en fonction du type
+        interactive: true,
+    };
+}
+        map.createPane('pane_fermes_aquacoles_2');
+        map.getPane('pane_fermes_aquacoles_2').style.zIndex = 402;
+        map.getPane('pane_fermes_aquacoles_2').style['mix-blend-mode'] = 'normal';
+        var layer_fermes_aquacoles_2 = new L.geoJson(json_fermes_aquacoles_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_fermes_aquacoles_2',
+            layerName: 'layer_fermes_aquacoles_2',
+            pane: 'pane_fermes_aquacoles_2',
+            onEachFeature: pop_fermes_aquacoles_2,
+            style: style_fermes_aquacoles_2_0,
+        });
+        bounds_group.addLayer(layer_fermes_aquacoles_2);
+        map.addLayer(layer_fermes_aquacoles_2);
+        function pop_loca_ferme_3(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['id'] !== null ? autolinker.link(feature.properties['id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">zone</th>\
+                        <td>' + (feature.properties['zone'] !== null ? autolinker.link(feature.properties['zone'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_loca_ferme_3_0() {
+            return {
+                pane: 'pane_loca_ferme_3',
+                opacity: 1,
+                color: 'red', // Couleur de la ligne (rouge)
+                dashArray: '',
+                lineCap: 'round',
+                lineJoin: 'round',
+                weight: 2.0,  // Épaisseur de la ligne en gras
+                fill: false,  // Pas de remplissage
+                interactive: true,
+            };
+        }
+
+        map.createPane('pane_loca_ferme_3');
+        map.getPane('pane_loca_ferme_3').style.zIndex = 403;
+        map.getPane('pane_loca_ferme_3').style['mix-blend-mode'] = 'normal';
+        var layer_loca_ferme_3 = new L.geoJson(json_loca_ferme_3, {
+    attribution: '',
+    interactive: true,
+    dataVar: 'json_loca_ferme_3',
+    layerName: 'layer_loca_ferme_3',
+    pane: 'pane_loca_ferme_3',
+    onEachFeature: pop_loca_ferme_3,
+    style: style_loca_ferme_3_0,
+});
+bounds_group.addLayer(layer_loca_ferme_3);
+map.addLayer(layer_loca_ferme_3);
+
+map.on('zoomend', function() {
+    var currentZoom = map.getZoom();
+    // Ajustez cette valeur selon votre besoin
+    var zoomThreshold = 10;
+
+    if (currentZoom >= zoomThreshold) {
+        map.removeLayer(layer_loca_ferme_3);
+    } else {
+        map.addLayer(layer_loca_ferme_3);
+    }
+});
+// Légende
+var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'info legend');
+    div.innerHTML += '<i style="background: yellow; color: white;"></i> Conchyliculture<br>';
+    div.innerHTML += '<i style="background: green; color: white;"></i> Algoculture<br>';
+    div.innerHTML += '<i style="background: blue; color: white;"></i> Pisciculture<br>';
+    return div;
+};
+
+legend.addTo(map);
+
+// Échelle
+L.control.scale().addTo(map);
+
+setBounds();
+</script>
+</body>
+</html>
